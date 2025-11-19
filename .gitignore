@@ -4,3 +4,4 @@
 .venv/
 users.txt
 __pycache__/
+DATA/
