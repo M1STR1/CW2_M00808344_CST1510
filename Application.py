@@ -164,8 +164,12 @@ def register_user():
 
 def login_user():
     """
-    Attempt login. On success returns a session token (truthy).
-    On failure returns False.
+    Attempt login.
+    Returns:
+      - session token (str) on success
+      - "locked" if account currently locked
+      - "notfound" if username not found
+      - "invalid" if username found but password incorrect
     """
     name = input("Enter your name: ").strip()
     psw = getpass.getpass("Enter your password: ")
@@ -174,29 +178,27 @@ def login_user():
     lock = _get_lockout(name)
     now = int(time.time())
     if lock.get("locked_until", 0) > now:
-        remaining = lock["locked_until"] - now
-        print(f"Account locked. Try again in {remaining} seconds.")
-        return False
+        return "locked"
 
     try:
         with open("users.txt", "r", encoding="utf-8") as f:
             users = f.readlines()
     except FileNotFoundError:
-        print("No users registered.")
-        return False
+        return "notfound"
 
+    found = False
     for user in users:
         parts = user.strip().split(",", 2)
         if len(parts) == 3:
             name_, role, hash = parts
         elif len(parts) == 2:
-            # legacy format: name,hash
             name_, hash = parts
             role = "user"
         else:
             continue
 
         if name_ == name:
+            found = True
             if validate_hash(psw, hash):
                 # success -> reset lockout and create session
                 _reset_lockout(name)
@@ -214,6 +216,7 @@ def login_user():
                 else:
                     print(f"Invalid credentials. {MAX_FAILED - failed} attempts left before lockout.")
                 _set_lockout(name, {"failed": failed, "locked_until": locked_until})
-                return False
-    print("User not found.")
-    return False
+                return "invalid"
+
+    if not found:
+        return "notfound"
