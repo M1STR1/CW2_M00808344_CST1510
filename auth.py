@@ -1,15 +1,23 @@
 import bcrypt
+import getpass
+from Application import hash_password, validate_hash
 
-# Test hashing
-hashed = hash_password(test_password)
-print(f"Original password: {test_password}")
-print(f"Hashed password: {hashed}")
-print(f"Hash length: {len(hashed)} characters")
+def main():
+    # hidden prompt for a test password
+    test_password = getpass.getpass("Enter test password (input hidden): ")
 
-# Test verification with correct password
-is_valid = verify_password(test_password, hashed)
-print(f"\nVerification with correct password: {is_valid}")
+    hashed = hash_password(test_password)
+    print(f"Original password: {'*' * len(test_password)} (length: {len(test_password)})")
+    print(f"Hashed password: {hashed}")
+    print(f"Hash length: {len(hashed)} characters")
 
-# Test verification with incorrect password
-is_invalid = verify_password("WrongPassword", hashed)
-print(f"Verification with incorrect password: {is_invalid}")
+    # Test verification with correct password
+    is_valid = validate_hash(test_password, hashed)
+    print(f"\nVerification with correct password: {is_valid}")
+
+    # Test verification with incorrect password
+    is_invalid = validate_hash("WrongPassword", hashed)
+    print(f"Verification with incorrect password: {is_invalid}")
+
+if __name__ == "__main__":
+    main()
