@@ -4,4 +4,7 @@
 .venv/
 users.txt
 __pycache__/
-DATA/
+DATA
+# allow app/data to be tracked
+!app/data/
+!app/data/**
