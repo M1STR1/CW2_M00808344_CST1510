@@ -1,6 +1,79 @@
 import bcrypt
 import re
 import getpass
+import json
+import time
+import os
+import secrets
+
+LOCKOUT_FILE = "lockouts.json"
+SESSIONS_FILE = "sessions.json"
+MAX_FAILED = 5
+LOCKOUT_SECONDS = 300        # 5 minutes
+SESSION_SECONDS = 3600      # 1 hour
+
+def _load_json(path):
+    if not os.path.exists(path):
+        return {}
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return {}
+
+def _save_json(path, data):
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(data, f)
+
+def _get_lockout(username):
+    data = _load_json(LOCKOUT_FILE)
+    return data.get(username, {"failed": 0, "locked_until": 0})
+
+def _set_lockout(username, record):
+    data = _load_json(LOCKOUT_FILE)
+    data[username] = record
+    _save_json(LOCKOUT_FILE, data)
+
+def _reset_lockout(username):
+    data = _load_json(LOCKOUT_FILE)
+    if username in data:
+        data.pop(username, None)
+        _save_json(LOCKOUT_FILE, data)
+
+def _create_session(username, role):
+    sessions = _load_json(SESSIONS_FILE)
+    token = secrets.token_hex(16)
+    now = int(time.time())
+    sessions[token] = {"username": username, "role": role, "created_at": now, "expires_at": now + SESSION_SECONDS}
+    _save_json(SESSIONS_FILE, sessions)
+    return token
+
+def validate_session(token):
+    sessions = _load_json(SESSIONS_FILE)
+    record = sessions.get(token)
+    if not record:
+        return False
+    if int(time.time()) > record.get("expires_at", 0):
+        # expired -> remove
+        sessions.pop(token, None)
+        _save_json(SESSIONS_FILE, sessions)
+        return False
+    return True
+
+def get_session_user(token):
+    sessions = _load_json(SESSIONS_FILE)
+    record = sessions.get(token)
+    if record and int(time.time()) <= record.get("expires_at", 0):
+        return record.get("username"), record.get("role")
+    return None, None
+
+def end_session(token):
+    sessions = _load_json(SESSIONS_FILE)
+    if token in sessions:
+        sessions.pop(token, None)
+        _save_json(SESSIONS_FILE, sessions)
+        return True
+    return False
 
 def hash_password(password):
     binary_password = password.encode('utf-8')
@@ -85,16 +158,31 @@ def register_user():
     hashed = hash_password(psw)
     with open("users.txt", "a", encoding="utf-8") as f:
         f.write(f"{name},{role},{hashed}\n")
+    # Reset any lockout info on new registration
+    _reset_lockout(name)
     print(f"User registered with role: {role}")
 
 def login_user():
+    """
+    Attempt login. On success returns a session token (truthy).
+    On failure returns False.
+    """
     name = input("Enter your name: ").strip()
     psw = getpass.getpass("Enter your password: ")
+
+    # Check lockout
+    lock = _get_lockout(name)
+    now = int(time.time())
+    if lock.get("locked_until", 0) > now:
+        remaining = lock["locked_until"] - now
+        print(f"Account locked. Try again in {remaining} seconds.")
+        return False
 
     try:
         with open("users.txt", "r", encoding="utf-8") as f:
             users = f.readlines()
     except FileNotFoundError:
+        print("No users registered.")
         return False
 
     for user in users:
@@ -110,8 +198,22 @@ def login_user():
 
         if name_ == name:
             if validate_hash(psw, hash):
-                print(f"Welcome {name} (role: {role})")
-                return True
+                # success -> reset lockout and create session
+                _reset_lockout(name)
+                token = _create_session(name, role)
+                print(f"Welcome {name} (role: {role}). Session token: {token}")
+                return token
             else:
+                # failure -> increment
+                lock = _get_lockout(name)
+                failed = lock.get("failed", 0) + 1
+                locked_until = 0
+                if failed >= MAX_FAILED:
+                    locked_until = int(time.time()) + LOCKOUT_SECONDS
+                    print(f"Too many failed attempts. Account locked for {LOCKOUT_SECONDS} seconds.")
+                else:
+                    print(f"Invalid credentials. {MAX_FAILED - failed} attempts left before lockout.")
+                _set_lockout(name, {"failed": failed, "locked_until": locked_until})
                 return False
+    print("User not found.")
     return False
