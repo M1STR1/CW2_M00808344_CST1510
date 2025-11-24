@@ -1,4 +1,4 @@
-from Application import register_user, login_user
+from Application import register_user, login_user, password_strength, print_strength_bar, hash_password
 
 def menu():
     print("Welcome! Choose an option:")
