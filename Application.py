@@ -45,7 +45,20 @@ def print_strength_bar(score: int):
     print(f"Strength: [{filled}{empty}] ({score}/5)")
 
 def register_user():
-    name = input("Enter your name: ")
+    name = input("Enter your name: ").strip()
+    if not name:
+        print("Name cannot be empty.")
+        return
+
+    # Role selection
+    valid_roles = ("user", "admin", "analyst")
+    while True:
+        role_input = input("Enter role (user/admin/analyst) [user]: ").strip().lower()
+        role = role_input or "user"
+        if role in valid_roles:
+            break
+        print("Invalid role. Choose from: user, admin, analyst.")
+
     while True:
         psw = getpass.getpass("Enter your password (input hidden): ")
         score, label = password_strength(psw)
@@ -70,22 +83,35 @@ def register_user():
                 return
 
     hashed = hash_password(psw)
-    with open("users.txt", "a") as f:
-        f.write(f"{name},{hashed}\n")
-    print("User registered.")
+    with open("users.txt", "a", encoding="utf-8") as f:
+        f.write(f"{name},{role},{hashed}\n")
+    print(f"User registered with role: {role}")
 
 def login_user():
-    name = input("Enter your name: ")
+    name = input("Enter your name: ").strip()
     psw = getpass.getpass("Enter your password: ")
 
     try:
-        with open("users.txt", "r") as f:
+        with open("users.txt", "r", encoding="utf-8") as f:
             users = f.readlines()
     except FileNotFoundError:
         return False
 
     for user in users:
-        name_, hash = user.strip().split(",", 1)
+        parts = user.strip().split(",", 2)
+        if len(parts) == 3:
+            name_, role, hash = parts
+        elif len(parts) == 2:
+            # legacy format: name,hash
+            name_, hash = parts
+            role = "user"
+        else:
+            continue
+
         if name_ == name:
-            return validate_hash(psw, hash)
+            if validate_hash(psw, hash):
+                print(f"Welcome {name} (role: {role})")
+                return True
+            else:
+                return False
     return False
