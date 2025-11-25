@@ -1,66 +1,74 @@
 from Application import (
-    register_user as interactive_register,
-    login_user as interactive_login,
+    register_user,
+    login_user,
+    password_strength,
+    print_strength_bar,
+    hash_password,
+    validate_hash,
+    validate_session,
     get_session_user,
+    end_session,
 )
-from app.data.db import connect_database
-from app.data.schema import create_all_tables
-from app.services.user_service import (
-    register_user as svc_register,
-    login_user as svc_login,
-    migrate_users_from_file,
-)
-from app.data.incidents import insert_incident, get_all_incidents
 
 def show_menu():
     print()
     print("Welcome! Choose an option:")
-    print("1. Register (interactive)")
-    print("2. Login (interactive)")
-    print("3. Run DB demo (migrate + CRUD tests)")
-    print("4. Exit")
+    print("1. Register")
+    print("2. Login")
+    print("3. Exit")
 
-def run_cli():
+def main():
     while True:
         show_menu()
-        choice = input("Enter choice (1, 2, 3, or 4): ").strip()
+        choice = input("Enter choice (1, 2, or 3): ").strip()
         if choice == "1":
-            interactive_register()
+            register_user()
+            print("User registered successfully.")
         elif choice == "2":
-            token = interactive_login()
-            if token and token not in ("locked","notfound","invalid"):
+            token = login_user()
+            if token:
+                print("Login successful.")
                 user, role = get_session_user(token)
-                print(f"Logged in as: {user} (role: {role})")
+                if user:
+                    print(f"Logged in as: {user} (role: {role})")
             else:
-                print("Login failed or other status:", token)
+                print("Login failed.")
         elif choice == "3":
-            run_db_demo()
-        elif choice == "4":
             print("Goodbye.")
             break
         else:
             print("Invalid choice. Please try again.")
 
-def run_db_demo():
+if __name__ == "__main__":
+    main()
+
+from app.data.db import connect_database
+from app.data.schema import create_all_tables
+from app.services.user_service import register_user, login_user, migrate_users_from_file
+from app.data.incidents import insert_incident, get_all_incidents
+
+def main():
     print("=" * 60)
-    print("DB demo: setup, migrate users, test svc register/login, CRUD incidents")
+    print("week 8: database demo")
     print("=" * 60)
 
+    # 1. setup database connection
     conn = connect_database()
     create_all_tables(conn)
     conn.close()
 
-    # migrate users from file (must exist)
+    # 2. migrate users from file
     migrate_users_from_file("app/data/users.txt")
     print("User migration completed.")
+    
+    # 3. test authentication
+    success, msg = register_user("alice", "password123", "analyst")
+    print(msg)
 
-    # Test service-based registration and login (non-interactive)
-    success, msg = svc_register("alice", "password123", "analyst")
-    print("Register:", success, msg)
-    success, msg = svc_login("alice", "password123")
-    print("Login:", success, msg)
+    success, msg = login_user("alice", "password123")
+    print(msg)
 
-    # Test CRUD
+    # 4. test CRUD
     incident_id = insert_incident(
         "2024-11-05",
         "Phishing Attack",
@@ -71,8 +79,9 @@ def run_db_demo():
     )
     print(f"Created incident #{incident_id}")
 
+    # 5. query data
     df = get_all_incidents()
-    print(f"Total incidents: {len(df)}")
+    print(f'Total incidents: {len(df)}')
 
 if __name__ == "__main__":
-    run_cli()
+    main()
