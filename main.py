@@ -46,42 +46,29 @@ from app.data.db import connect_database
 from app.data.schema import create_all_tables
 from app.services.user_service import register_user, login_user, migrate_users_from_file
 from app.data.incidents import insert_incident, get_all_incidents
+from app.data.csv_loader import load_all_csv_data
 
 def main():
-    print("=" * 60)
-    print("week 8: database demo")
-    print("=" * 60)
+    print("="*60)
+    print("Week 8: Database Demo")
+    print("="*60)
 
-    # 1. setup database connection
     conn = connect_database()
     create_all_tables(conn)
     conn.close()
 
-    # 2. migrate users from file
-    migrate_users_from_file("app/data/users.txt")
-    print("User migration completed.")
-    
-    # 3. test authentication
-    success, msg = register_user("alice", "password123", "analyst")
+    migrated = migrate_users_from_file()  # returns number migrated
+    print(f"Migrated {migrated} users (if any)")
+
+    success, msg = register_user("alice", "SecurePass123!", "analyst")
+    print(msg)
+    success, msg = login_user("alice", "SecurePass123!")
     print(msg)
 
-    success, msg = login_user("alice", "password123")
-    print(msg)
-
-    # 4. test CRUD
-    incident_id = insert_incident(
-        "2024-11-05",
-        "Phishing Attack",
-        "High",
-        "Open",
-        "Suspicious email detected",
-        "alice"
-    )
-    print(f"Created incident #{incident_id}")
-
-    # 5. query data
+    incident_id = insert_incident("2024-11-05", "Phishing", "High", "Open", "Suspicious email", "alice")
+    print(f"Created incident {incident_id}")
     df = get_all_incidents()
-    print(f'Total incidents: {len(df)}')
+    print(f"Total incidents: {len(df)}")
 
 if __name__ == "__main__":
     main()
