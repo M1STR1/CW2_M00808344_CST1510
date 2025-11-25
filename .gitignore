@@ -6,8 +6,9 @@ users.txt
 __pycache__/
 DATA
 
-# allow app/data and services to be tracked
-!app/data/
-!app/data/**
-!services/
-!services/**
+# ignore app data and services
+app/data/
+services/
+
+# pytest cache
+.pytest_cache/
