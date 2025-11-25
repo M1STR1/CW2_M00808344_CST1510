@@ -39,11 +39,10 @@ def create_datasets_metadata_table(conn):
         CREATE TABLE IF NOT EXISTS datasets_metadata (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             dataset_name TEXT NOT NULL,
-            category TEXT,
+            description TEXT,
             source TEXT,
             last_updated TEXT,
             record_count INTEGER,
-            file_size_mb REAL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     """)
