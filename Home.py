@@ -1,89 +1,57 @@
 import streamlit as st
-import pandas as pd
-from pathlib import Path
-import sqlite3
 
-DATA_DIR = Path("DATA")             # put CSV/DB here
-DATA_DIR.mkdir(exist_ok=True)
+st.set_page_config(page_title="Login", layout="wide")
 
-st.set_page_config(page_title="My app", page_icon=":shark:", layout="wide")
-st.title("📊 Sales Dashboard")
+# --- Session state setup ---
+if "users" not in st.session_state:
+    st.session_state.users = {}  # For coursework demo only
 
-# Cached data loader (use st.cache_data; older streamlit use st.cache)
-@st.cache_data(ttl=300)
-def load_csv(path: str) -> pd.DataFrame:
-    return pd.read_csv(path)
+if "logged_in" not in st.session_state:
+    st.session_state.logged_in = False
 
-@st.cache_data(ttl=300)
-def load_db_table(db_path: str, table: str) -> pd.DataFrame:
-    conn = sqlite3.connect(db_path)
-    df = pd.read_sql_query(f"SELECT * FROM {table}", conn)
-    conn.close()
-    return df
+if "username" not in st.session_state:
+    st.session_state.username = ""
 
-with st.sidebar:
-    st.title("Controls")
-    # Option 1: select a CSV from DATA folder
-    csv_files = ["--"] + [str(p.name) for p in DATA_DIR.glob("*.csv")]
-    chosen_csv = st.selectbox("Choose CSV (DATA folder)", csv_files)
+# --- Tabs for login/register ---
+tab_login, tab_register = st.tabs(["Login", "Register"])
 
-    # Option 2: upload a file (one-time)
-    uploaded = st.file_uploader("Upload CSV", type=["csv"])
+# =====================
+# LOGIN TAB
+# =====================
+with tab_login:
+    st.header("Login")
 
-    # Option 3: load from sqlite table if exists
-    db_path = str(DATA_DIR / "intelligence_platform.db")
-    use_db = st.checkbox("Load from DB (cyber_incidents)", value=False)
+    login_username = st.text_input("Username", key="login_username")
+    login_password = st.text_input("Password", type="password", key="login_password")
 
-    # Refresh button
-    if st.button("Refresh"):
-        st.experimental_rerun()
+    if st.button("Log In"):
+        users = st.session_state.users
+        if login_username in users and users[login_username] == login_password:
+            st.session_state.logged_in = True
+            st.session_state.username = login_username
+            st.success("Login successful!")
+            st.switch_page("pages/1_Dashboard.py")
+        else:
+            st.error("Invalid username or password")
 
-# Decide which source to use
-df = pd.DataFrame()
-if uploaded is not None:
-    df = pd.read_csv(uploaded)
-elif chosen_csv != "--":
-    df = load_csv(str(DATA_DIR / chosen_csv))
-elif use_db and Path(db_path).exists():
-    df = load_db_table(db_path, "cyber_incidents")
-else:
-    # fallback: sample dataframe
-    df = pd.DataFrame({'Column A': [1, 2, 3, 4], 'Column B': ['A', 'B', 'C', 'D']})
 
-# show dataframe and simple filters
-st.subheader("Data Table")
-st.dataframe(df)
+# =====================
+# REGISTER TAB
+# =====================
+with tab_register:
+    st.header("Create Account")
 
-# Provide quick filters based on available columns
-if not df.empty:
-    st.subheader("Filters")
-    cols = df.columns.tolist()
-    col_filter = st.selectbox("Filter column", ["--"] + cols)
-    if col_filter != "--":
-        unique = list(df[col_filter].dropna().unique()[:50])
-        selected = st.multiselect(f"Select values from {col_filter}", unique, default=unique[:5])
-        if selected:
-            df = df[df[col_filter].isin(selected)]
-        st.dataframe(df)
+    new_username = st.text_input("Create username", key="new_user")
+    new_password = st.text_input("Create password", type="password", key="new_pass")
+    confirm_password = st.text_input("Confirm password", type="password", key="confirm_pass")
 
-# charts
-col1, col2 = st.columns(2)
-with col1:
-    st.subheader("Bar Chart (numeric)")
-    # pick first numeric column for simple chart
-    numeric_cols = df.select_dtypes("number").columns.tolist()
-    if numeric_cols:
-        st.bar_chart(df[numeric_cols[0]])
-    else:
-        st.info("No numeric columns for bar chart")
-
-with col2:
-    st.subheader("Line Chart")
-    if numeric_cols:
-        st.line_chart(df[numeric_cols[0]])
-    else:
-        st.info("No numeric columns for line chart")
-
-with st.expander("See details"):
-    st.write("Hidden content")
-    st.dataframe(df)
+    if st.button("Register"):
+        if not new_username or not new_password:
+            st.warning("Please fill in all fields.")
+        elif new_password != confirm_password:
+            st.error("Passwords do not match.")
+        elif new_username in st.session_state.users:
+            st.error("Username already taken.")
+        else:
+            st.session_state.users[new_username] = new_password
+            st.success("Account created! Go to Login tab.")
