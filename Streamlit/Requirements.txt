@@ -1,3 +1,6 @@
-bcrypt
+streamlit>=1.24.0
 pandas
-pytest
+plotly
+bcrypt
+python-dotenv
+openai
