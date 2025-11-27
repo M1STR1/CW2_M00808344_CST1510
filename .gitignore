@@ -4,11 +4,3 @@
 .venv/
 users.txt
 __pycache__/
-DATA
-
-# ignore app data and services
-app/data/
-services/
-
-# pytest cache
-.pytest_cache/
