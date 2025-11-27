@@ -1,18 +1,38 @@
+import bcrypt
 from app.data.db import connect_database
 
-def get_user_by_username(username: str, db_path=None):
-    """Retrieve user by username."""
-    conn = connect_database(db_path) if db_path else connect_database()
-    cursor = conn.cursor()
-    cursor.execute("SELECT id, username, password_hash, role FROM users WHERE username = ?", (username,))
-    user = cursor.fetchone()
-    conn.close()
-    return user
+# Basic user helpers using sqlite3 and bcrypt
 
-def insert_user(username: str, password_hash: str, role: str = 'user', db_path=None):
-    """Insert a new user into the database."""
-    conn = connect_database(db_path) if db_path else connect_database()
-    cursor = conn.cursor()
-    cursor.execute("INSERT INTO users (username, password_hash, role) VALUES (?, ?, ?)", (username, password_hash, role))
-    conn.commit()
-    conn.close()
+def create_user(conn, username: str, password: str, role: str = "user"):
+    pw_hash = bcrypt.hashpw(password.encode(), bcrypt.gensalt())
+    cur = conn.cursor()
+    try:
+        cur.execute("INSERT INTO users (username, password_hash, role) VALUES (?, ?, ?)",
+        (username, pw_hash, role))
+        conn.commit()
+        return True
+    except Exception:
+        return False
+
+
+def verify_user(conn, username: str, password: str):
+    cur = conn.cursor()
+    cur.execute("SELECT password_hash, role FROM users WHERE username = ?", (username,))
+    row = cur.fetchone()
+    if not row:
+        return False, None
+    pw_hash = row[0]
+    role = row[1]
+    try:
+        if bcrypt.checkpw(password.encode(), pw_hash):
+            return True, role
+        return False, None
+    except Exception:
+        return False, None
+
+
+def get_user_role(conn, username: str):
+    cur = conn.cursor()
+    cur.execute("SELECT role FROM users WHERE username = ?", (username,))
+    row = cur.fetchone()
+    return row[0] if row else None
