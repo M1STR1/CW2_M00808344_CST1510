@@ -1,4 +1,4 @@
-from Application import (
+from app.Application import (
     register_user,
     login_user,
     password_strength,

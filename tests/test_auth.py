@@ -1,4 +1,4 @@
-from Application import hash_password, validate_hash
+from app.Application import hash_password, validate_hash
 
 def test_hash_and_validate():
     pwd = "TestPass1!"

@@ -1,7 +1,7 @@
 import time
 import os
 from pathlib import Path
-from Application import (
+from app.Application import (
     hash_password, validate_hash,
     _get_lockout, _set_lockout, _reset_lockout,
     _create_session, validate_session, get_session_user, end_session,
