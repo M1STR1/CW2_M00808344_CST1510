@@ -1,23 +1,21 @@
-import bcrypt
-import getpass
-from app.Application import hash_password, validate_hash
+from app.data.db import connect_database
+from app.data.users import create_user, verify_user, get_user_role
 
-def main():
-    # hidden prompt for a test password
-    test_password = getpass.getpass("Enter test password (input hidden): ")
 
-    hashed = hash_password(test_password)
-    print(f"Original password: {'*' * len(test_password)} (length: {len(test_password)})")
-    print(f"Hashed password: {hashed}")
-    print(f"Hash length: {len(hashed)} characters")
+# High-level helpers used by Streamlit pages
 
-    # Test verification with correct password
-    is_valid = validate_hash(test_password, hashed)
-    print(f"\nVerification with correct password: {is_valid}")
 
-    # Test verification with incorrect password
-    is_invalid = validate_hash("WrongPassword", hashed)
-    print(f"Verification with incorrect password: {is_invalid}")
+def register_user(username, password, role='user', db_path=None):
+    conn = connect_database(db_path)
+    return create_user(conn, username, password, role)
 
-if __name__ == "__main__":
-    main()
+
+def login_user(username, password, db_path=None):
+    conn = connect_database(db_path)
+    ok, role = verify_user(conn, username, password)
+    return ok, role
+
+
+def user_role(username, db_path=None):
+    conn = connect_database(db_path)
+    return get_user_role(conn, username)
