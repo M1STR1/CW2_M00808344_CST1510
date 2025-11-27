@@ -46,6 +46,7 @@ with tab_login:
             st.session_state.username = user
             st.session_state.role = role
             st.switch_page("pages/1_Dashboard.py")
+            st.balloons
         else:
             st.error("Invalid username or password.")
 
