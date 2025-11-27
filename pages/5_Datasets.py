@@ -1,23 +1,24 @@
+# datasets.py
 import streamlit as st
-import pandas as pd 
+import pandas as pd
 
-def get_all_datasets(conn):
-    cur = conn.cursor()
-    cur.execute("SELECT * FROM datasets_metadata ORDER BY id DESC")
-    rows = cur.fetchall()
-    return [dict(r) for r in rows]
+# Page title
+st.title("Datasets Metadata Viewer")
 
+# Load datasets metadata from CSV
+datasets_file = "datasets_metadata.csv"
 
-def insert_dataset(conn, name, source, category, size):
-    cur = conn.cursor()
-    cur.execute(
-        "INSERT INTO datasets_metadata (name, source, category, size) VALUES (?, ?, ?, ?)",
-        (name, source, category, size)
-    )
-    conn.commit()
-
-
-def delete_dataset(conn, dataset_id):
-    cur = conn.cursor()
-    cur.execute("DELETE FROM datasets_metadata WHERE id = ?", (dataset_id,))
-    conn.commit()
+try:
+    df = pd.read_csv(datasets_file)
+    
+    # Display the dataframe
+    st.dataframe(df)
+    
+    # Optional: allow filtering by a column, e.g., "category"
+    if "category" in df.columns:
+        category_filter = st.selectbox("Filter by category:", ["All"] + df["category"].unique().tolist())
+        if category_filter != "All":
+            filtered_df = df[df["category"] == category_filter]
+            st.dataframe(filtered_df)
+except FileNotFoundError:
+    st.error(f"File {datasets_file} not found.")

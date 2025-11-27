@@ -1,21 +1,17 @@
+# tickets.py
 import streamlit as st
-import pandas as pd 
+import pandas as pd
 
-def get_all_tickets(conn):
-    cur = conn.cursor()
-    cur.execute("SELECT * FROM it_tickets ORDER BY id DESC")
-    rows = cur.fetchall()
-    return [dict(r) for r in rows]
+# Page title
+st.title("IT Tickets")
 
-
-def insert_ticket(conn, title, priority, status, created_date):
-    cur = conn.cursor()
-    cur.execute("INSERT INTO it_tickets (title, priority, status, created_date) VALUES (?, ?, ?, ?)",
-                (title, priority, status, created_date))
-    conn.commit()
-
-
-def delete_ticket(conn, ticket_id):
-    cur = conn.cursor()
-    cur.execute("DELETE FROM it_tickets WHERE id = ?", (ticket_id,))
-    conn.commit()
+# Load tickets from CSV
+# Make sure the path is correct relative to your main app
+tickets_file = "DATA\it_tickets.csv"
+try:
+    df = pd.read_csv(tickets_file)
+    
+    # Display the dataframe
+    st.dataframe(df)
+except FileNotFoundError:
+    st.error(f"File {tickets_file} not found.")
