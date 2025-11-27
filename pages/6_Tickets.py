@@ -1,3 +1,6 @@
+import streamlit as st
+import pandas as pd 
+
 def get_all_tickets(conn):
     cur = conn.cursor()
     cur.execute("SELECT * FROM it_tickets ORDER BY id DESC")
