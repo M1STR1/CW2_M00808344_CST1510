@@ -6,7 +6,7 @@ import pandas as pd
 st.title("Datasets Metadata Viewer")
 
 # Load datasets metadata from CSV
-datasets_file = "datasets_metadata.csv"
+datasets_file = "DATA\datasets_metadata.csv"
 
 try:
     df = pd.read_csv(datasets_file)
