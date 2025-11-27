@@ -4,3 +4,8 @@
 .venv/
 users.txt
 __pycache__/
+DATA/
+cyber_incidents.csv
+datasets_metadata.csv
+intelligence_platform.db
+it_tickets.csv
