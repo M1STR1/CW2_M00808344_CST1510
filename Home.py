@@ -42,14 +42,16 @@ with tab_login:
 
         if ok:
             st.success("Login successful!")
+            st.balloons()  # SHOW BALLOONS FIRST
+
             st.session_state.logged_in = True
             st.session_state.username = user
             st.session_state.role = role
+
             st.switch_page("pages/1_Dashboard.py")
-            st.balloons
+
         else:
             st.error("Invalid username or password.")
-
 
 # ==========================================
 #             REGISTER TAB
