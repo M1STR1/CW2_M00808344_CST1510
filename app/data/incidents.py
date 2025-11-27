@@ -1,42 +1,44 @@
 import pandas as pd
-from app.data.db import connect_database
+from typing import List, Dict
 
-def insert_incident(date, incident_type, severity, status, description, reported_by=None, db_path=None):
-    """Insert new incident"""
-    conn = connect_database(db_path) if db_path else connect_database()
-    cursor = conn.cursor()
-    cursor.execute("""
-        INSERT INTO cyber_incidents (date, incident_type, severity, status, description, reported_by)
-        VALUES (?, ?, ?, ?, ?, ?)
-    """, (date, incident_type, severity, status, description, reported_by))
+# Keep SQL parameterized
+
+def get_all_incidents(conn):
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM cyber_incidents ORDER BY id DESC")
+    rows = cur.fetchall()
+    if not rows:
+        return []
+    cols = rows[0].keys()
+    return [dict(r) for r in rows]
+
+
+def insert_incident(conn, title, severity, status, date):
+    cur = conn.cursor()
+    cur.execute(
+        "INSERT INTO cyber_incidents (title, severity, status, date) VALUES (?, ?, ?, ?)",
+        (title, severity, status, date)
+    )
     conn.commit()
-    incident_id = cursor.lastrowid
-    conn.close()
-    return incident_id
 
-def get_all_incidents(db_path=None):
-    """Retrieve all incidents"""
-    conn = connect_database(db_path) if db_path else connect_database()
-    df = pd.read_sql_query("SELECT * FROM cyber_incidents ORDER BY id DESC", conn)
-    conn.close()
-    return df
 
-def update_incident_status(incident_id, new_status, db_path=None):
-    """Update the status of an incident"""
-    conn = connect_database(db_path) if db_path else connect_database()
-    cursor = conn.cursor()
-    cursor.execute("UPDATE cyber_incidents SET status = ? WHERE id = ?", (new_status, incident_id))
+def update_incident(conn, incident_id, **fields):
+    keys = list(fields.keys())
+    values = [fields[k] for k in keys]
+    set_clause = ", ".join([f"{k} = ?" for k in keys])
+    sql = f"UPDATE cyber_incidents SET {set_clause} WHERE id = ?"
+    cur = conn.cursor()
+    cur.execute(sql, (*values, incident_id))
     conn.commit()
-    changed = cursor.rowcount
-    conn.close()
-    return changed
 
-def delete_incident(incident_id, db_path=None):
-    """Delete an incident"""
-    conn = connect_database(db_path) if db_path else connect_database()
-    cursor = conn.cursor()
-    cursor.execute("DELETE FROM cyber_incidents WHERE id = ?", (incident_id,))
+
+def delete_incident(conn, incident_id):
+    cur = conn.cursor()
+    cur.execute("DELETE FROM cyber_incidents WHERE id = ?", (incident_id,))
     conn.commit()
-    deleted = cursor.rowcount
-    conn.close()
-    return deleted
+
+
+def load_incidents_from_csv(conn, csv_path):
+    df = pd.read_csv(csv_path)
+    for _, row in df.iterrows():
+        insert_incident(conn, row.get('title', ''), row.get('severity', ''), row.get('status', ''), row.get('date', ''))
