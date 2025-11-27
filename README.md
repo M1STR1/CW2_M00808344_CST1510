@@ -1,125 +1,160 @@
-# Multi-Domain Intelligence Platform — Week 7 / Week 8
+📘 CST1510 Coursework — README (Week 7, Week 8, Week 9)
+📅 Week 7 — Foundations & Planning
 
-Student: Lee-Brandon Lindsey  
-Student ID: M00808344  
-Course: CST1510 — CW2
+During Week 7, the focus was on preparing the structure and logic for the Multi-Domain Intelligence Platform. This included understanding the problem, planning system architecture, and organising the folders and modules needed for the full project.
 
----
+Key Achievements
 
-## Project Summary
-Small command-line intelligence platform demonstrating secure authentication and a database-backed system for Week 7 & Week 8.  
-Includes secure password hashing, role-based users, account lockout, session management, and simple CRUD capabilities.
+Analysed the three domains:
 
----
+Cybersecurity
 
-## Features
-- Secure password storage using bcrypt (with automatic salting)
-- Password strength indicator
-- Role-based registration: user / admin / analyst
-- Account lockout after repeated failed logins
-- Session management (create / validate / end)
-- SQLite database schema for users, incidents, datasets, and IT tickets
-- Migration from `DATA/users.txt` into the database
-- CSV import and CRUD helpers for incidents
-- Unit tests (pytest) for core logic and flows
+Data Science
 
----
+IT Operations
 
-## Technical Implementation
-- Hash Algorithm: bcrypt
-- Database: SQLite (file under `DATA/`)
-- Data storage of users (legacy): comma-separated `users.txt`
-- Language: Python 3.10+ (recommended)
-- Key files:
-  - `Application.py` — interactive auth flows, lockout, sessions
-  - `main.py` — CLI demo and DB demo
-  - `app/data/schema.py` — table creation
-  - `app/data/db.py` — DB connection helper
-  - `app/services/user_service.py` — service layer for user CRUD
-  - `app/data/incidents.py` — incidents CRUD & CSV loader
-  - `auth.py` — simple password hashing test script
+Designed high-level system architecture:
 
----
+Database layer
 
-## Requirements
-Install dependencies:
-```
-python -m venv .venv
-.venv\Scripts\activate
-pip install -r requirements.txt
-```
-(For PowerShell use: `.venv\Scripts\Activate.ps1`)
+Logic/Backend layer
 
----
+Streamlit UI layer
 
-## Setup and Running
-1. Ensure package folders exist:
-   - `app/`, `app/data/`, `app/services/`
-   - Include `__init__.py` files if needed.
+Planned CRUD operations and data flow
 
-2. Create a `DATA/` directory if you want to store data files locally:
-```
-mkdir DATA
-```
+Created an organised project folder structure
 
-3. Run the demo CLI:
-```
-python main.py
-```
+Identified required tools: SQLite, Streamlit, bcrypt, pandas
 
-The CLI includes:
-- Register
-- Login
-- A DB demo that creates tables, migrates users, and performs CRUD
+Learning Outcome
 
----
+Gained experience in software planning, breaking a multi-layer Python application into clear components and preparing for backend/database development.
 
-## Migration format
-- The migration script (`migrate_users_from_file`) reads `DATA/users.txt`. Each line must be:
-```
-username,hashed_password,role
-```
-- Use `bcrypt`-generated hashes if migrating from legacy data.
+📅 Week 8 — Database, CRUD & Backend Logic
 
----
+Week 8 focused on building the backend and database systems that power the platform. You built a full SQLite database with all required tables and CRUD operations.
 
-## Testing
-Run all tests:
-```
-pytest -q
-```
-Unit tests use temporary DB files to avoid changing your `DATA/` folder.
+Database Schema
 
----
+The following tables were created:
 
-## Git Notes
-- `.gitignore` hides `app/data/` and `services/` to avoid committing data or ephemeral files:
-```
-app/data/
-services/
-.pytest_cache/
-```
-- To track these folders, remove the ignore rules and re-add files:
-```
-git rm -r --cached app/data services
-git add app/data services .gitignore
-git commit -m "Track app/data and services"
-```
+Users
 
----
+username
 
-## Troubleshooting
-- ImportError: Ensure `__init__.py` exists in `app`, `app/data`, `app/services`.
-- Bcrypt missing: `pip install bcrypt`
-- Pandas errors (CSV loader): `pip install pandas`
-- Database not creating: Confirm `create_all_tables(conn)` runs before CRUD operations.
+password_hash
 
----
+role
 
-## Next Steps
-- Add role-based CLI actions (admin-only functionality)
-- Add more unit tests for migration, CSV loader, and interactive flows
-- Add CI to run tests on push (GitHub Actions)
-- Improve session persistence (database-backed sessions in production)
+Cyber Incidents
 
----
+Datasets Metadata
+
+IT Tickets
+
+Backend Implementations
+
+SQLite database setup
+
+Secure password hashing using bcrypt
+
+Parameterised SQL queries (safe from injection)
+
+CRUD functions for all three domains
+
+Database connection and helper modules
+
+Testing backend functions before connecting to the UI
+
+Learning Outcome
+
+You learned how to:
+
+Design and create relational tables
+
+Write SQL for INSERT, SELECT, UPDATE, DELETE
+
+Use Python to interact with a database
+
+Build secure and reusable backend modules
+
+📅 Week 9 — Streamlit, Frontend UI & Integration
+
+Week 9 involved building the entire web interface in Streamlit and connecting it to the backend created in Week 8.
+
+Key Streamlit Features Completed
+🔐 Authentication System
+
+Login and registration pages
+
+Session state (logged_in, username, role)
+
+Redirects and page guards
+
+Secure authentication using the database
+
+🎨 User Interface & Layout
+
+Multi-page Streamlit app using pages/
+
+Clean layout using columns, tabs and expanders
+
+Metrics using st.metric()
+
+Data tables using st.dataframe()
+
+Navigation via the sidebar
+
+🗄️ CRUD UI Integration
+
+Each domain now supports:
+
+Adding entries
+
+Viewing data
+
+Editing entries
+
+Deleting entries
+All fully linked to the Week 8 database functions.
+
+📊 Visualisation & Analytics
+
+Created domain-specific charts:
+
+Cybersecurity threats
+
+Data science training metrics
+
+IT operations usage trends
+
+Used:
+
+pandas DataFrames
+
+Streamlit built-in charts (bar, line)
+
+🤖 AI Integration (Preview)
+
+Added an optional page using OpenAI API for automated analysis or natural language summaries.
+
+Learning Outcome
+
+Week 9 developed your ability to:
+
+Build professional web apps in Python
+
+Connect frontend UI to backend logic
+
+Use session state for authentication
+
+Create data visualisations
+
+Structure and style multi-page apps
+
+🎯 Summary (Weeks 7–9)
+Week	Focus	Outcome
+Week 7	Project Planning	Clear architecture & folder structure
+Week 8	Database + CRUD	Fully working backend with secure authentication
+Week 9	Streamlit UI	Complete multi-page frontend with charts + CRUD
